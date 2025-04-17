@@ -4,6 +4,7 @@ import logging
 import sys
 import json
 from dotenv import load_dotenv
+from database import get_wordpress_db_connection
 
 # --- Load .env Before Other Imports ---
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -370,12 +371,13 @@ def analyze_and_create_briefs(max_briefs_to_create=50, min_opportunity_score=15)
         analyzer = ContentAnalyzer(analyzer_config, database.get_db_connection)
 
         wp_service = WordPressService(
-             api_url=config.WP_CONFIG['api_url'],
-             api_user=config.WP_CONFIG['api_user'],
-             api_password=config.WP_CONFIG['api_password'],
-             db_connection_func=database.get_db_connection
-         )
-
+            api_url=config.WP_CONFIG['api_url'],
+            api_user=config.WP_CONFIG['api_user'],
+            api_password=config.WP_CONFIG['api_password'],
+            db_connection_func=database.get_db_connection,  # For PythonAnywhere DB
+            wp_db_connection_func=database.get_wordpress_db_connection  # For WordPress DB
+        )
+        
         # Initialize ImagenClient (needed potentially by workflow service later)
         imagen_client = None
         if config.GOOGLE_CONFIG.get('gemini_api_key'):

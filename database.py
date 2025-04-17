@@ -41,6 +41,52 @@ def get_db_connection():
          log.error(f"Unexpected error getting DB connection: {e}")
          return None
 
+# First, let's create a WordPress-specific DB connection function in database.py
+
+def get_wordpress_db_connection():
+    """Establishes and returns a connection to the WordPress database."""
+    # Import cloudways_ip_whitelist here to avoid circular imports
+    from cloudways_ip_whitelist import whitelist_ip_sync
+    
+    # First, attempt to whitelist the IP - this is crucial for Cloudways access
+    whitelist_result = whitelist_ip_sync()
+    if not whitelist_result:
+        log.warning("IP whitelisting for Cloudways WordPress DB failed. Connection might fail.")
+    else:
+        log.info("Successfully whitelisted IP for WordPress database access")
+    
+    # Get WordPress DB credentials from environment
+    wp_db_host = os.getenv('WP_DB_HOST')
+    wp_db_user = os.getenv('WP_DB_USER')
+    wp_db_password = os.getenv('WP_DB_PASSWORD')
+    wp_db_name = os.getenv('WP_DB_NAME')
+    wp_db_port = int(os.getenv('WP_DB_PORT', '3306'))
+    
+    if not all([wp_db_host, wp_db_user, wp_db_password, wp_db_name]):
+        log.error("WordPress database configuration is incomplete.")
+        return None
+    
+    try:
+        conn = mysql.connector.connect(
+            host=wp_db_host,
+            user=wp_db_user,
+            password=wp_db_password,
+            database=wp_db_name,
+            port=wp_db_port
+        )
+        if conn.is_connected():
+            log.info(f"Successfully connected to WordPress database at {wp_db_host}")
+            return conn
+        else:
+            log.error("Failed to connect to the WordPress database.")
+            return None
+    except mysql.connector.Error as err:
+        log.error(f"WordPress DB Connection Error: {err}")
+        return None
+    except Exception as e:
+        log.error(f"Unexpected error getting WordPress DB connection: {e}")
+        return None
+
 def test_connection():
     """Tests the database connection."""
     conn = get_db_connection()

@@ -8,6 +8,7 @@ import random # For jitter
 from dotenv import load_dotenv # Import load_dotenv
 import sys # For printing to stderr during debug and sys.exit
 from datetime import datetime
+from database import get_wordpress_db_connection
 
 # --- Load .env Before Other Imports ---
 # Construct the path relative to this script file or use absolute path
@@ -119,7 +120,13 @@ def process_single_task(task):
         if not wp_api_url or not wp_api_user or not wp_api_password:
              raise ValueError("WP Credentials check failed inside task processing.")
         # Pass individual vars to WordPressService (ensure its __init__ expects these)
-        wp_service = WordPressService(wp_api_url, wp_api_user, wp_api_password, database.get_db_connection)
+        wp_service = WordPressService(
+            wp_api_url, 
+            wp_api_user, 
+            wp_api_password, 
+            db_connection_func=database.get_db_connection,  # For PythonAnywhere DB
+            wp_db_connection_func=database.get_wordpress_db_connection  # For WordPress DB
+)
 
         # --- Get Anthropic variables directly ---
         anthropic_key = os.getenv('ANTHROPIC_API_KEY')

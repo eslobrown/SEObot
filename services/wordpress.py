@@ -12,7 +12,7 @@ from typing import Optional
 log = logging.getLogger(__name__)
 
 class WordPressService:
-    def __init__(self, api_url, api_user, api_password, db_connection_func=None):
+    def __init__(self, api_url, api_user, api_password, db_connection_func=None, wp_db_connection_func=None):
             # --- MODIFICATION START ---
         # Ensure api_url points to the REST API root, typically ending in /wp-json/
         if api_url:
@@ -35,9 +35,11 @@ class WordPressService:
             self.api_url_base = None
         # --- MODIFICATION END ---
 
+        self.api_url = api_url
         self.api_user = api_user
         self.api_password = api_password
-        self.get_db_connection = db_connection_func
+        self.get_db_connection = db_connection_func  # For PythonAnywhere DB
+        self.get_wp_db_connection = wp_db_connection_func  # For WordPress DB
         self.auth = (self.api_user, self.api_password)
 
         if not db_connection_func:
@@ -64,36 +66,30 @@ class WordPressService:
 
         log.info(f"WordPressService initialized for API base: {self.api_url_base}") # Log the adjusted base
 
-        # --- NEW: update_term_meta ---
     def update_term_meta(self, term_id: int, meta_key: str, meta_value: str) -> bool:
-        """Updates (or adds) term meta using a direct database connection."""
-        if not self.get_db_connection:
-            log.error("Cannot update term meta: Database connection function not provided.")
+        """Updates (or adds) term meta using a direct connection to the WordPress database."""
+        if not self.get_wp_db_connection:  # Use WordPress DB connection
+            log.error("Cannot update term meta: WordPress database connection function not provided.")
             return False
         if not term_id or not meta_key:
-             log.error("Cannot update term meta: term_id and meta_key are required.")
-             return False
-        # Allow meta_value to be None or empty string for deletion/clearing purposes
-        # if meta_value is None: meta_value = '' # Treat None as empty string for DB
+            log.error("Cannot update term meta: term_id and meta_key are required.")
+            return False
 
         conn = None
         cursor = None
         success = False
-        wp_prefix = os.getenv('WP_TABLE_PREFIX', 'wp_') # Get prefix from env
+        wp_prefix = os.getenv('WP_TABLE_PREFIX', 'wp_')  # Get prefix from env
 
         try:
             log.info(f"Attempting to update term meta for term_id={term_id}, meta_key='{meta_key}'")
-            conn = self.get_db_connection()
+            conn = self.get_wp_db_connection()  # Use WordPress DB connection
             if not conn:
-                log.error("Failed to get DB connection for term meta update.")
+                log.error("Failed to get WordPress DB connection for term meta update.")
                 return False
 
             cursor = conn.cursor()
 
             # Use INSERT ... ON DUPLICATE KEY UPDATE for atomicity
-            # This simplifies logic (no need to check existence first)
-            # Assumes meta_id is the primary key or there's a unique key on (term_id, meta_key)
-            # If using standard WP schema, a unique key usually exists.
             sql = f"""
                 INSERT INTO {wp_prefix}termmeta (term_id, meta_key, meta_value)
                 VALUES (%s, %s, %s)
@@ -103,18 +99,14 @@ class WordPressService:
             log.debug(f"Executed INSERT/UPDATE for term meta term_id={term_id}, meta_key='{meta_key}'")
 
             conn.commit()
-            # Check rowcount: 1 means insert, 2 means update (usually), 0 means no change/error
             if cursor.rowcount > 0:
-                 success = True
-                 log.info(f"Successfully updated/inserted term meta for term_id={term_id}, meta_key='{meta_key}' (Rows affected: {cursor.rowcount})")
+                success = True
+                log.info(f"Successfully updated/inserted term meta for term_id={term_id}, meta_key='{meta_key}' (Rows affected: {cursor.rowcount})")
             elif cursor.rowcount == 0:
-                 # This could mean the value was already the same. Treat as success for workflow.
-                 success = True
-                 log.info(f"Term meta value likely unchanged for term_id={term_id}, meta_key='{meta_key}'.")
+                success = True
+                log.info(f"Term meta value likely unchanged for term_id={term_id}, meta_key='{meta_key}'.")
             else:
-                 # Should not happen with INSERT...ON DUPLICATE KEY UPDATE unless there's an error caught below
-                 success = False
-
+                success = False
 
         except mysql.connector.Error as err:
             log.error(f"Database error updating term meta for term_id={term_id}, meta_key='{meta_key}': {err}")
@@ -129,7 +121,6 @@ class WordPressService:
             if conn and conn.is_connected(): conn.close()
 
         return success
-    # --- END NEW ---
 
         # --- NEW: get_term_link ---
     def get_term_link(self, term_id: int, taxonomy: str) -> Optional[str]:
