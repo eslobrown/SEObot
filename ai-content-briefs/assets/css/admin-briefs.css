@@ -1,0 +1,77 @@
+/**
+ * Highly targeted CSS for status dropdowns 
+ * Add this to your admin-briefs.css file
+ */
+
+/* Status dropdown styling - targeting WP structure exactly */
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select {
+    min-width: 120px;
+    padding: 4px;
+    box-sizing: border-box;
+    border-color: #7e8993;
+    border-radius: 3px;
+}
+
+/* Individual status styling for options */
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="pending"] { color: #777; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="approved"] { color: #0073aa; font-weight: bold; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="generating"] { color: #ffb900; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="draft_ready"] { color: #46b450; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="published"] { color: #00a32a; font-weight: bold; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="error"] { color: #d63638; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option[value="skip"] { color: #999; }
+
+/* Style the dropdown itself based on currently selected value */
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="pending"] { color: #777; border-left: 3px solid #777; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="approved"] { color: #0073aa; border-left: 3px solid #0073aa; font-weight: bold; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="generating"] { color: #ffb900; border-left: 3px solid #ffb900; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="draft_ready"] { color: #46b450; border-left: 3px solid #46b450; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="published"] { color: #00a32a; border-left: 3px solid #00a32a; font-weight: bold; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="error"] { color: #d63638; border-left: 3px solid #d63638; }
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select[data-current-status="skip"] { color: #999; border-left: 3px solid #999; text-decoration: line-through; }
+
+/* Added styles for when dropdown is disabled */
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select:disabled {
+    opacity: 0.7;
+    background-color: #f6f7f7;
+}
+
+/* Success animation for cells */
+@keyframes success-fade {
+    from { background-color: #ccffcc; }
+    to { background-color: transparent; }
+}
+body.post-type-acb_content_brief table.wp-list-table td.status-updated {
+    animation: success-fade 2s;
+}
+
+/* Spinner visibility control */
+body.post-type-acb_content_brief table.wp-list-table .spinner.is-active {
+    visibility: visible;
+    margin-left: 5px;
+}
+
+/* Fix dropdown width and prevent overflow */
+body.post-type-acb_content_brief table.wp-list-table td {
+    overflow: visible; /* Allow dropdown to be visible when expanded */
+}
+
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select {
+    max-width: 100px !important; /* Limit width */
+    width: auto !important; /* Let it size naturally */
+    min-width: 0 !important; /* Override previous min-width */
+    box-sizing: border-box !important;
+}
+
+/* Control width when dropdown is expanded */
+body.post-type-acb_content_brief table.wp-list-table select.acb-status-select option {
+    width: auto;
+    max-width: 150px; /* Allow options to be wider than the select itself */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Column widths - make status column narrower */
+body.post-type-acb_content_brief table.wp-list-table th.column-status {
+    width: 100px !important;
+}

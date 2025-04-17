@@ -1,0 +1,29 @@
+# Python general
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Git
+.git/
+
+# Other
+*.sqlite3
+*.db
+
+# Logs and data
+*.log
+*.json
+*.jpg
+*.rtf
